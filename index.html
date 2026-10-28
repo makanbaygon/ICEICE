@@ -270,6 +270,7 @@ let countedItems = [];
 let activeSessions = [];
 let allSessions = [];
 
+
 async function loadCategoryOptions() {
   const select = $('categoryFilter');
   const previous = select.value;
@@ -281,18 +282,60 @@ async function loadCategoryOptions() {
   allOption.textContent = 'Semua Kategori';
   select.appendChild(allOption);
 
-  const { data, error } = await supabase
-    .from('products')
-    .select('category')
-    .not('category', 'is', null)
-    .order('category')
-    .limit(1000);
+  try {
+    const categoriesSet = new Set();
+    const pageSize = 1000;
+    let offset = 0;
 
-  if (error) {
-    console.error('Gagal memuat kategori:', error.message);
-    showMessage('productStatus', 'Gagal memuat kategori: ' + error.message);
-    return;
+    // Ambil seluruh kategori secara bertahap, bukan hanya 1.000 baris.
+    while (true) {
+      const { data, error } = await supabase
+        .from('products')
+        .select('category')
+        .not('category', 'is', null)
+        .order('category')
+        .range(offset, offset + pageSize - 1);
+
+      if (error) throw error;
+
+      for (const item of data || []) {
+        const category = String(item.category || '').trim();
+        if (category) categoriesSet.add(category);
+      }
+
+      if (!data || data.length < pageSize) break;
+      offset += pageSize;
+    }
+
+    const categories = [...categoriesSet].sort((a, b) =>
+      a.localeCompare(b, 'id', { sensitivity: 'base' })
+    );
+
+    for (const category of categories) {
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category;
+      select.appendChild(option);
+    }
+
+    if (categories.includes(previous)) {
+      select.value = previous;
+    }
+
+    console.log('Kategori berhasil dimuat:', categories.length);
+    showMessage(
+      'productStatus',
+      `Berhasil memuat ${categories.length} kategori.`
+    );
+
+  } catch (error) {
+    console.error('Gagal memuat kategori:', error);
+    showMessage(
+      'productStatus',
+      'Gagal memuat kategori: ' + error.message
+    );
   }
+}
 
   const categories = [...new Set(
     (data || [])
@@ -608,7 +651,17 @@ async function startBarcodeScanner() {
   }
 }
 
+
 async function loadDashboard() {
+  await loadCategoryOptions();
+
+  showMessage('productStatus', 'Memuat data produk...');
+  showMessage('sessionStatus', 'Memuat sesi SO...');
+
+  // Lanjutkan kode loadDashboard lama kamu
+  // mulai dari const [productsResult, sessionsResult] = ...
+}
+
   showMessage('productStatus', 'Memuat data produk...');
   showMessage('sessionStatus', 'Memuat sesi SO...');
   const [productsResult, sessionsResult] = await Promise.all([
@@ -918,7 +971,7 @@ async function searchProducts(scannedBarcode = '') {
     const digits = (term.match(/\d/g) || []).length;
     const letters = (term.match(/[a-zA-Z]/g) || []).length;
 
-    if (!scannedBarcode && digits < 6 && letters < 6) {
+   if (!scannedBarcode && !category && digits < 6 && letters < 6) {
       showMessage(
         'productStatus',
         'Ketik minimal 6 angka barcode atau 6 huruf nama barang.'
