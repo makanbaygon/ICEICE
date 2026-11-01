@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ID40 // Cyberpunk Stock Opname</title>
+<meta name="theme-color" content="#e0f3ec">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ID40 SO">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E">
+<title>ID40 Stock Opname</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; }
 body { margin: 0; font-family: Inter, Segoe UI, Arial, sans-serif; background: radial-gradient(ellipse at top, #172344 0%, #090d1b 52%, #050711 100%); color: #e7f7ff; }
@@ -65,12 +73,69 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
 .grid{gap:12px}table{width:100%;border-collapse:collapse;color:var(--text)}th,td{padding:12px 8px;border-bottom:1px solid rgba(53,245,255,.13);text-align:left;font-size:13px;overflow-wrap:anywhere}th{color:var(--cyan);font-size:11px;letter-spacing:.8px;text-transform:uppercase;background:rgba(53,245,255,.045)}tbody tr:hover{background:rgba(53,245,255,.035)}.table-wrap{border:1px solid rgba(53,245,255,.13);border-radius:9px;overflow-x:auto}.scanner-panel{background:rgba(5,10,26,.75);border:1px solid rgba(255,59,212,.28);border-radius:11px;padding:14px}#barcodeReader{max-width:520px;margin:12px auto}#barcodeReader video{border-radius:9px;border:1px solid var(--cyan)}.image-preview,.product-image-card{background:rgba(5,10,26,.65);border:1px solid rgba(53,245,255,.2);border-radius:11px}.image-preview{padding:12px}.image-preview img{background:#fff}.product-image-card{display:flex;gap:14px;align-items:center;margin:12px 0;padding:14px}.product-image-card img{width:140px;height:140px;object-fit:contain;background:#fff;border:1px solid rgba(53,245,255,.35);border-radius:8px}.product-image-card strong{color:#fff}.count-number{width:100px;min-width:80px;padding:8px;margin:0}.session-select{margin:8px 0 12px}label{color:#b9c8ed;font-size:13px}#loginStatus,#scanStatus,#productStatus,#saveOpnameStatus,#sessionStatus{color:var(--cyan)}[hidden]{display:none!important}::selection{background:rgba(255,59,212,.4);color:white}
 @media(max-width:520px){header{padding:20px 16px}.card{padding:16px}.product-image-card{align-items:flex-start;flex-direction:column}.product-image-card img{width:100%;max-width:220px;height:180px}}@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
+.product-thumb,#productImage{cursor:zoom-in}
+#imgLightbox{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.9);display:grid;place-items:center;padding:16px;cursor:zoom-out}
+#imgLightbox[hidden]{display:none!important}
+#imgLightbox img{max-width:100%;max-height:90vh;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #35f5ff}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.tabs .tab{margin-top:0;background:rgba(139,92,246,.13);color:#d9d1ff;border-color:rgba(139,92,246,.5)}
+.tabs .tab.active{background:linear-gradient(105deg,#087f99,#5b32ad);color:#fff;border-color:#35f5ff;box-shadow:0 0 16px rgba(53,245,255,.3)}
+body[data-mode="search"] [data-so]{display:none!important}
+
+/* ===== TEMA SEGAR (terang) ===== */
+:root{color-scheme:light;--bg:#f1f7f4;--panel:#fff;--cyan:#07665a;--pink:#e8553f;--purple:#0a8470;--text:#14302a;--muted:#5d7a72;--line:#d8e6e0;--brand:#0a8470;--brand-d:#07665a;--soft:#e4f4ee}
+html{background:var(--bg)}
+body{font-family:"Plus Jakarta Sans",Inter,"Segoe UI",Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,#e0f3ec 0,#f1f7f4 300px);letter-spacing:0}
+body:before{display:none}
+header{background:transparent;border:0;box-shadow:none;overflow:visible;padding:28px max(16px,calc((100vw - 850px)/2 + 16px)) 6px}
+header:after{display:none}
+header h2{color:var(--text);text-shadow:none;letter-spacing:-.3px;font-size:clamp(25px,5vw,31px);font-weight:800}
+header p{color:var(--muted);text-transform:none;letter-spacing:0;font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(20,48,42,.04),0 10px 28px rgba(20,48,42,.06);backdrop-filter:none}
+.card:before{display:none}
+.card h3,h3{color:var(--text);text-transform:none;letter-spacing:0;font-size:18px;font-weight:700}
+label{color:var(--text);font-weight:600;font-size:13px}
+.small{color:var(--muted)}
+input,select{background:#f7fbf9;color:var(--text);border:1.5px solid var(--line);border-radius:12px;font-family:inherit}
+input::placeholder{color:#8fa8a0}
+input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(10,132,112,.16)}
+#productSearch{background:#fff;border-color:var(--brand);border-radius:14px;padding:15px 16px;font-size:17px}
+button{background:var(--brand);color:#fff;border:0;border-radius:12px;text-shadow:none;letter-spacing:0;font-family:inherit;box-shadow:0 2px 0 rgba(7,102,90,.4)}
+button:hover{background:var(--brand-d);transform:none;box-shadow:0 2px 0 rgba(7,102,90,.55)}
+button:active{transform:translateY(1px)}
+button.secondary{background:#fff;color:var(--brand-d);border:1.5px solid var(--line);box-shadow:none}
+button.danger{background:#fdeceb;color:#b8321f;border:1.5px solid #f6c9c3;box-shadow:none}
+.tabs{background:#dcece6;padding:5px;border-radius:16px;gap:4px}
+.tabs .tab{background:transparent;color:var(--muted);border:0;box-shadow:none;font-weight:700}
+.tabs .tab:hover{background:rgba(255,255,255,.5)}
+.tabs .tab.active{background:#fff;color:var(--brand-d);box-shadow:0 1px 4px rgba(20,48,42,.14)}
+.stat{background:var(--soft);border:0;color:var(--muted);border-radius:14px}
+.stat strong{color:var(--text);text-shadow:none}
+th{color:var(--muted);background:#f3f8f6;text-transform:none;letter-spacing:0;font-size:12px;font-weight:700}
+td,th{border-bottom:1px solid var(--line)}
+tbody tr:hover{background:#f7fbf9}
+#productRows td:nth-child(4){font-weight:800;color:var(--brand-d);white-space:nowrap}
+.table-wrap{border:1px solid var(--line);border-radius:12px}
+.scanner-panel{background:#f7fbf9;border:1.5px dashed #9fd3c5;border-radius:14px}
+#barcodeReader video{border:0;border-radius:12px}
+.image-preview,.product-image-card{background:#f7fbf9;border:1px solid var(--line);border-radius:14px}
+.product-image-card strong{color:var(--text);font-size:17px}
+.product-image-card img,.image-preview img{background:#fff;border:1px solid var(--line)}
+.product-thumb{border:1px solid var(--line);background:#fff}
+.count-number{background:#fff}
+#loginStatus,#scanStatus,#productStatus,#saveOpnameStatus,#sessionStatus,#countsStatus{color:var(--brand-d)}
+#imgLightbox{background:rgba(20,48,42,.85)}
+#imgLightbox img{border-color:var(--line)}
+::selection{background:rgba(10,132,112,.25);color:inherit}
+.price-big{font-size:30px;font-weight:800;color:var(--brand-d);margin:6px 0 0}
+.stock-big{font-size:17px;font-weight:700;margin:2px 0 6px}
+#countedRows button{margin-top:6px}
 </style>
 </head>
-<body>
+<body data-mode="search">
 <header>
-  <h2>ID40 // STOCK OPNAME</h2>
-  <p>Cyber inventory system • Neon interface</p>
+  <h2>ID40 Stock Opname</h2>
+  <p>Cari barang, scan barcode, dan hitung stok</p>
 </header>
 <main>
   <section id="loginCard" class="card">
@@ -94,7 +159,12 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
       <button id="logoutBtn" class="secondary">Logout</button>
     </div>
 
-    <div class="card">
+    <div class="tabs" role="tablist">
+      <button type="button" id="tabSearch" class="tab active" role="tab">🔎 Cari Barang</button>
+      <button type="button" id="tabSO" class="tab" role="tab">📋 Stock Opname</button>
+    </div>
+
+    <div class="card" data-so>
       <h3>Ringkasan</h3>
       <div class="grid">
         <div class="stat">Jumlah produk<strong id="productTotal">—</strong></div>
@@ -103,12 +173,12 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
     </div>
 
     <div class="card">
-      <h3>Data Barang</h3>
-      <label for="activeSessionSelect">Sesi Stock Opname aktif</label>
-      <select id="activeSessionSelect" class="session-select">
+      <h3 id="dataBarangTitle">Cari Barang</h3>
+      <label for="activeSessionSelect" data-so>Sesi Stock Opname aktif</label>
+      <select id="activeSessionSelect" class="session-select" data-so>
         <option value="">Memuat sesi...</option>
       </select>
-      <p class="small">Pilih sesi aktif sebelum menyimpan hasil hitungan.</p>
+      <p class="small" data-so>Pilih sesi aktif sebelum menyimpan hasil hitungan.</p>
       <label for="categoryFilter">Filter Kategori</label>
       <select id="categoryFilter" class="session-select">
         <option value="">Memuat kategori...</option>
@@ -137,18 +207,20 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
         <div class="product-image-info">
           <strong id="productImageName"></strong>
           <p id="productImageBarcode" class="small"></p>
+          <p id="productImagePrice" class="price-big"></p>
+          <p id="productImageStock" class="stock-big"></p>
           <p id="productImageStatus" class="small"></p>
         </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Barcode / Foto</th><th>Nama Barang</th><th>Kategori</th><th>Harga</th><th>Stok Sistem</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Barcode / Foto</th><th>Nama Barang</th><th>Kategori</th><th>Harga</th><th>Stok Sistem</th><th data-so>Aksi</th></tr></thead>
           <tbody id="productRows"></tbody>
         </table>
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" data-so>
       <h3>Hasil Hitungan Fisik</h3>
       <p class="small">Scan barcode berulang kali untuk menambah hitungan satu per scan, atau gunakan tombol +1 dari hasil pencarian. Kamu bisa mengubah jumlah fisik secara manual.</p>
       <div class="grid">
@@ -165,7 +237,7 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
       <p id="saveOpnameStatus" class="small" role="status"></p>
     </div>
 
-    <div class="card">
+    <div class="card" data-so>
       <h3>Pratinjau Gambar dari Google Drive</h3>
       <p class="small">Opsional: uji link gambar produk secara manual. Foto produk hasil scan otomatis dicari dari server gambar Miniso menggunakan pola barcode-nya.</p>
       <label for="googleImageLink">Link gambar (Google Drive atau URL langsung)</label>
@@ -177,14 +249,14 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
       <p class="small">Catatan: gambar Google Drive harus memiliki akses yang mengizinkan website melihatnya (misalnya “Siapa saja yang memiliki link”). Beberapa link Google tidak dapat ditampilkan langsung oleh browser.</p>
     </div>
 
-    <div class="card">
+    <div class="card" data-so>
       <h3>Sesi Stock Opname</h3>
       <p class="small">Daftar sesi yang dapat dilihat oleh akun ini.</p>
       <div id="sessionList"></div>
       <p id="sessionStatus" class="small"></p>
     </div>
 
-    <div class="card" id="savedCountsCard">
+    <div class="card" id="savedCountsCard" data-so>
       <h3>Riwayat Hasil Stock Opname</h3>
       <p class="small">Pilih satu sesi untuk menarik hasil yang sudah tersimpan di tabel <code>so_counts</code>.</p>
       <label for="historySessionSelect">Pilih sesi yang ingin dilihat</label>
@@ -192,6 +264,7 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
         <option value="">Memuat sesi...</option>
       </select>
       <button id="loadCountsBtn" type="button">Tarik Data Sesi</button>
+      <button id="exportCsvBtn" class="secondary" type="button">Unduh hasil (CSV, bisa dibuka di Excel)</button>
       <p id="countsStatus" class="small" role="status" aria-live="polite">Pilih sesi, lalu tekan Tarik Data Sesi.</p>
       <div class="grid" style="margin:12px 0">
         <div class="stat">Barang dalam sesi<strong id="historyCountTotal">—</strong></div>
@@ -205,13 +278,14 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
       </div>
     </div>
 
-    <div id="supervisorNotice" class="card" hidden>
+    <div id="supervisorNotice" class="card" data-so hidden>
       <h3>Menu Supervisor</h3>
       <p>Akun supervisor terdeteksi. Fitur pengelolaan produk, karyawan, sesi SO, dan ekspor akan ditambahkan pada tahap berikutnya.</p>
     </div>
   </section>
 </main>
 
+<div id="imgLightbox" hidden><img alt="Foto produk"></div>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'https://esm.sh/html5-qrcode@2.3.8';
@@ -220,6 +294,14 @@ const SUPABASE_URL = 'https://zfxewmzsvmzxrfqbkmre.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_thVM_xwRc90C7MYlpIxX2w__FiG5RA1';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
+
+const lightbox = $('imgLightbox');
+document.addEventListener('click', e => {
+  const img = e.target.closest('.product-thumb, #productImage');
+  if (img) { lightbox.querySelector('img').src = img.src; lightbox.hidden = false; return; }
+  if (e.target.closest('#imgLightbox')) lightbox.hidden = true;
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') lightbox.hidden = true; });
 
 let currentUser = null;
 let currentProfile = null;
@@ -231,6 +313,7 @@ let lastScannedAt = 0;
 let countedItems = [];
 let activeSessions = [];
 let allSessions = [];
+let historyExport = [];
 
 function showMessage(id, message) {
   $(id).textContent = message;
@@ -240,6 +323,8 @@ function getProductImageUrl(barcode) {
   return `https://miniso-pic.oss-cn-shenzhen.aliyuncs.com/${encodeURIComponent(String(barcode).trim())}-1.jpg`;
 }
 
+const rupiah = n => (n == null || n === '') ? '—' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(n));
+
 function showProductImage(product) {
   const card = $('productImageCard');
   const img = $('productImage');
@@ -248,6 +333,8 @@ function showProductImage(product) {
   card.hidden = false;
   $('productImageName').textContent = product.product_name || 'Nama barang tidak tersedia';
   $('productImageBarcode').textContent = 'Barcode: ' + (product.barcode || '—');
+  $('productImagePrice').textContent = rupiah(product.price);
+  $('productImageStock').textContent = 'Stok sistem: ' + (product.system_stock ?? '—');
   $('productImageStatus').textContent = 'Memuat foto produk...';
 
   // Prioritaskan URL gambar di Supabase; jika gagal, coba URL Miniso dari barcode.
@@ -267,7 +354,21 @@ function showProductImage(product) {
   img.src = savedUrl || fallbackUrl;
 }
 
+function playErrorBeep() {
+  try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (_) {}
+  try {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return;
+    const ctx = new C(), osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.value = 200; gain.gain.value = 0.08;
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.45);
+    osc.onended = () => ctx.close().catch(() => {});
+  } catch (_) {}
+}
+
 function playScanBeep() {
+  try { navigator.vibrate && navigator.vibrate(60); } catch (_) {}
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextClass) return;
@@ -287,7 +388,28 @@ function playScanBeep() {
   }
 }
 
+const draftKey = () => 'id40Draft:' + (currentUser?.id || '');
+function saveDraft() {
+  try {
+    if (!currentUser) return;
+    if (countedItems.length) localStorage.setItem(draftKey(), JSON.stringify(countedItems));
+    else localStorage.removeItem(draftKey());
+  } catch (_) {}
+}
+function loadDraft() {
+  try {
+    if (!currentUser || countedItems.length) return;
+    const items = JSON.parse(localStorage.getItem(draftKey()) || '[]');
+    if (Array.isArray(items) && items.length) {
+      countedItems = items;
+      renderCountedItems();
+      showMessage('saveOpnameStatus', `Draft hitungan dipulihkan (${items.length} barang). Belum tersimpan ke sesi SO.`);
+    }
+  } catch (_) {}
+}
+
 function updateCountSummary() {
+  saveDraft();
   $('countedProductTotal').textContent = countedItems.length;
   $('countedUnitTotal').textContent = countedItems.reduce((sum, item) => sum + Number(item.physical_stock || 0), 0);
 }
@@ -334,6 +456,15 @@ function renderCountedItems() {
       countedItems = countedItems.filter((_, i) => i !== index);
       renderCountedItems();
     });
+    const minusButton = document.createElement('button');
+    minusButton.type = 'button';
+    minusButton.className = 'secondary';
+    minusButton.textContent = '−1';
+    minusButton.style.padding = '8px';
+    minusButton.addEventListener('click', () => {
+      if (Number(item.physical_stock) > 0) { item.physical_stock = Number(item.physical_stock) - 1; renderCountedItems(); }
+    });
+    actionCell.appendChild(minusButton);
     actionCell.appendChild(removeButton);
     row.appendChild(actionCell);
     body.appendChild(row);
@@ -494,9 +625,9 @@ async function startBarcodeScanner() {
         lastScannedBarcode = decodedText;
         lastScannedAt = now;
         $('productSearch').value = decodedText;
-        playScanBeep();
         showMessage('scanStatus', 'Barcode terbaca: ' + decodedText + '. Kamera tetap aktif untuk scan berikutnya.');
         await searchProducts(decodedText);
+        if (document.body.dataset.mode !== 'so') return; // mode Cari Barang: tidak menambah hitungan
         const { data, error } = await supabase
           .from('products')
           .select('id, barcode, product_name, category, price, system_stock, image_url')
@@ -564,6 +695,7 @@ async function loadCategoryOptions() {
 }
 
 async function loadDashboard() {
+  loadDraft();
   showMessage('productStatus', 'Memuat data produk dan kategori...');
   const categoryResult = await loadCategoryOptions();
   showMessage('sessionStatus', 'Memuat sesi SO...');
@@ -696,6 +828,7 @@ async function loadSavedCounts() {
   body.replaceChildren();
   $('historyCountTotal').textContent = '—';
   $('historyQtyTotal').textContent = '—';
+  historyExport = [];
   if (!sessionId) {
     showMessage('countsStatus', 'Pilih satu sesi terlebih dahulu.');
     return;
@@ -739,10 +872,12 @@ async function loadSavedCounts() {
       row.appendChild(makeCell(physical));
       const diff = physical - system;
       const diffCell = makeCell(diff > 0 ? '+' + diff : diff);
-      if (diff < 0) diffCell.style.color = '#ff8da8';
-      else if (diff > 0) diffCell.style.color = '#35f5ff';
+      diffCell.style.fontWeight = '700';
+      if (diff < 0) diffCell.style.color = '#c9372c';
+      else if (diff > 0) diffCell.style.color = '#0a8470';
       row.appendChild(diffCell);
       row.appendChild(makeCell(count.updated_at ? new Date(count.updated_at).toLocaleString('id-ID') : '—'));
+      historyExport.push([product.barcode, product.product_name, product.category, product.price, product.system_stock, physical, diff, count.updated_at || '']);
       body.appendChild(row);
     });
 
@@ -773,6 +908,10 @@ async function saveOpname() {
     return;
   }
 
+  const totalPcs = countedItems.reduce((n, i) => n + Number(i.physical_stock || 0), 0);
+  const sessionLabel = $('activeSessionSelect').selectedOptions[0]?.textContent || sessionId;
+  if (!confirm(`Simpan ${countedItems.length} barang (total ${totalPcs} pcs) ke sesi:\n${sessionLabel}?`)) return;
+
   const button = $('saveOpnameBtn');
   button.disabled = true;
   showMessage('saveOpnameStatus', 'Menyimpan hasil opname...');
@@ -794,6 +933,7 @@ async function saveOpname() {
       onConflict: 'session_id,product_id'
     });
     if (error) throw error;
+    try { localStorage.removeItem(draftKey()); } catch (_) {}
     showMessage('saveOpnameStatus', `Berhasil menyimpan ${countedItems.length} barang ke sesi SO.`);
   } catch (error) {
     console.error('Save opname error:', error);
@@ -845,12 +985,14 @@ async function searchProducts(scannedBarcode = '') {
   }
 
   if (!data || !data.length) {
+    if (scannedBarcode) playErrorBeep();
     showMessage('productStatus', scannedBarcode
       ? `Barcode ${scannedBarcode} tidak ditemukan di database produk.`
       : `Barang tidak ditemukan${category ? ' pada kategori ' + category : ''}.`);
     return;
   }
 
+  if (scannedBarcode) playScanBeep();
   if (data.length === 1) showProductImage(data[0]);
   data.forEach(product => {
     const row = document.createElement('tr');
@@ -892,6 +1034,7 @@ async function searchProducts(scannedBarcode = '') {
       addProductToCount(product, 1);
       showMessage('saveOpnameStatus', `${product.product_name || product.barcode} ditambahkan +1.`);
     });
+    actionCell.dataset.so = '';
     actionCell.appendChild(addButton);
     row.appendChild(actionCell);
     rows.appendChild(row);
@@ -940,11 +1083,24 @@ async function logout() {
   }
   currentUser = null;
   currentProfile = null;
+  countedItems = [];
+  renderCountedItems();
   $('dashboard').hidden = true;
   $('loginCard').hidden = false;
   $('loginForm').reset();
   showMessage('loginStatus', 'Kamu sudah logout.');
 }
+
+function setMode(mode) {
+  document.body.dataset.mode = mode;
+  $('tabSearch').classList.toggle('active', mode === 'search');
+  $('tabSO').classList.toggle('active', mode === 'so');
+  $('dataBarangTitle').textContent = mode === 'so' ? 'Data Barang' : 'Cari Barang';
+  try { localStorage.setItem('id40Mode', mode); } catch (_) {}
+}
+$('tabSearch').addEventListener('click', () => setMode('search'));
+$('tabSO').addEventListener('click', () => setMode('so'));
+try { if (localStorage.getItem('id40Mode') === 'so') setMode('so'); } catch (_) {}
 
 $('loginForm').addEventListener('submit', login);
 $('logoutBtn').addEventListener('click', logout);
@@ -973,6 +1129,19 @@ $('stopScanBtn').addEventListener('click', async () => {
 $('retryScanBtn').addEventListener('click', startBarcodeScanner);
 $('saveOpnameBtn').addEventListener('click', saveOpname);
 $('loadCountsBtn').addEventListener('click', loadSavedCounts);
+$('exportCsvBtn').addEventListener('click', () => {
+  if (!historyExport.length) { showMessage('countsStatus', 'Tarik data sesi dulu, baru bisa diunduh.'); return; }
+  const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const lines = [['Barcode','Nama Barang','Kategori','Harga','Stok Sistem','Stok Fisik','Selisih','Waktu Update']]
+    .concat(historyExport).map((r, i) => r.map((v, c) => (i && c === 0) ? '="' + String(v ?? '') + '"' : esc(v)).join(','));
+  const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const name = ($('historySessionSelect').selectedOptions[0]?.textContent || 'sesi').replace(/[^\w-]+/g, '_').slice(0, 40);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hasil-so-' + name + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
 $('historySessionSelect').addEventListener('change', () => {
   $('savedCountRows').replaceChildren();
   $('historyCountTotal').textContent = '—';
