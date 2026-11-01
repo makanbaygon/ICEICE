@@ -74,9 +74,9 @@ input,button,select{width:100%;padding:13px;margin-top:10px;border:1px solid rgb
 @media(max-width:520px){header{padding:20px 16px}.card{padding:16px}.product-image-card{align-items:flex-start;flex-direction:column}.product-image-card img{width:100%;max-width:220px;height:180px}}@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
 .product-thumb,#productImage{cursor:zoom-in}
-#imgLightbox{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.9);display:grid;place-items:center;padding:16px;cursor:zoom-out}
+#imgLightbox{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;cursor:zoom-out}
 #imgLightbox[hidden]{display:none!important}
-#imgLightbox img{max-width:100%;max-height:90vh;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #35f5ff}
+#imgLightbox img{max-width:100%;max-height:70vh;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #35f5ff}
 .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .tabs .tab{margin-top:0;background:rgba(139,92,246,.13);color:#d9d1ff;border-color:rgba(139,92,246,.5)}
 .tabs .tab.active{background:linear-gradient(105deg,#087f99,#5b32ad);color:#fff;border-color:#35f5ff;box-shadow:0 0 16px rgba(53,245,255,.3)}
@@ -130,6 +130,8 @@ tbody tr:hover{background:#f7fbf9}
 .price-big{font-size:30px;font-weight:800;color:var(--brand-d);margin:6px 0 0}
 .stock-big{font-size:17px;font-weight:700;margin:2px 0 6px}
 #countedRows button{margin-top:6px}
+#imgLightboxInfo{color:#fff;font-size:13px;line-height:1.5;text-align:center;max-width:520px;overflow-wrap:anywhere}
+#imgLightboxInfo strong{display:block;font-size:15px;margin-bottom:2px}
 </style>
 </head>
 <body data-mode="search">
@@ -285,7 +287,7 @@ tbody tr:hover{background:#f7fbf9}
   </section>
 </main>
 
-<div id="imgLightbox" hidden><img alt="Foto produk"></div>
+<div id="imgLightbox" hidden><img alt="Foto produk"><div id="imgLightboxInfo"></div></div>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'https://esm.sh/html5-qrcode@2.3.8';
@@ -296,9 +298,30 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 
 const lightbox = $('imgLightbox');
+function fillLightboxInfo(p) {
+  const box = $('imgLightboxInfo');
+  box.replaceChildren();
+  if (!p) return;
+  const title = document.createElement('strong');
+  title.textContent = p.product_name || 'Nama barang tidak tersedia';
+  const price = p.price == null || p.price === '' ? '—' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(p.price));
+  const lines = [
+    'Barcode: ' + (p.barcode ?? '—'),
+    'Kategori: ' + (p.category || '—') + ' · Harga: ' + price,
+    'Stok sistem: ' + (p.system_stock ?? '—')
+  ];
+  if (p.physical !== undefined) lines.push('Stok fisik: ' + p.physical + ' · Selisih: ' + (p.diff > 0 ? '+' + p.diff : p.diff));
+  box.appendChild(title);
+  lines.forEach(t => { const d = document.createElement('div'); d.textContent = t; box.appendChild(d); });
+}
 document.addEventListener('click', e => {
   const img = e.target.closest('.product-thumb, #productImage');
-  if (img) { lightbox.querySelector('img').src = img.src; lightbox.hidden = false; return; }
+  if (img) {
+    lightbox.querySelector('img').src = img.src;
+    fillLightboxInfo(img._product);
+    lightbox.hidden = false;
+    return;
+  }
   if (e.target.closest('#imgLightbox')) lightbox.hidden = true;
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') lightbox.hidden = true; });
@@ -331,6 +354,7 @@ function showProductImage(product) {
   const savedUrl = String(product.image_url || '').trim();
   const fallbackUrl = getProductImageUrl(product.barcode);
   card.hidden = false;
+  img._product = product;
   $('productImageName').textContent = product.product_name || 'Nama barang tidak tersedia';
   $('productImageBarcode').textContent = 'Barcode: ' + (product.barcode || '—');
   $('productImagePrice').textContent = rupiah(product.price);
@@ -795,13 +819,14 @@ function makeCell(value) {
   return td;
 }
 
-function appendHistoryProductCell(row, product) {
+function appendHistoryProductCell(row, product, extra) {
   const td = document.createElement('td');
   td.className = 'barcode-cell';
   const img = document.createElement('img');
   img.className = 'product-thumb';
   img.alt = '';
   img.loading = 'lazy';
+  img._product = Object.assign({}, product, extra || {});
   const savedUrl = String(product?.image_url || '').trim();
   img.src = savedUrl || getProductImageUrl(product?.barcode || '');
   img.onerror = () => {
@@ -864,7 +889,7 @@ async function loadSavedCounts() {
       const system = Number(product.system_stock || 0);
       totalQty += physical;
       const row = document.createElement('tr');
-      appendHistoryProductCell(row, product);
+      appendHistoryProductCell(row, product, { physical, diff: physical - system });
       row.appendChild(makeCell(product.product_name));
       row.appendChild(makeCell(product.category));
       row.appendChild(makeCell(product.price == null ? '—' : Number(product.price).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })));
@@ -1003,6 +1028,7 @@ async function searchProducts(scannedBarcode = '') {
     thumb.className = 'product-thumb';
     thumb.alt = 'Foto ' + (product.product_name || 'produk');
     thumb.loading = 'lazy';
+    thumb._product = product;
     thumb.src = String(product.image_url || '').trim() || getProductImageUrl(product.barcode);
     thumb.onerror = () => {
       if (thumb.dataset.fallbackTried !== 'yes' && product.image_url) {
