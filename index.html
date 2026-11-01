@@ -216,7 +216,7 @@ tbody tr:hover{background:#f7fbf9}
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Barcode / Foto</th><th>Nama Barang</th><th>Kategori</th><th>Harga</th><th>Stok Sistem</th><th data-so>Aksi</th></tr></thead>
+          <thead><tr><th>Barcode / Foto</th><th>Nama Barang</th><th>Kategori</th><th>Harga</th><th>Stok Sistem</th><th>Stok Toko</th><th data-so>Aksi</th></tr></thead>
           <tbody id="productRows"></tbody>
         </table>
       </div>
@@ -281,8 +281,15 @@ tbody tr:hover{background:#f7fbf9}
     </div>
 
     <div id="supervisorNotice" class="card" data-so hidden>
-      <h3>Menu Supervisor</h3>
-      <p>Akun supervisor terdeteksi. Fitur pengelolaan produk, karyawan, sesi SO, dan ekspor akan ditambahkan pada tahap berikutnya.</p>
+      <h3>Update stok toko</h3>
+      <p class="small">Khusus supervisor. Pilih file Excel atau CSV yang punya kolom Barcode dan stok toko (misalnya “门店库存” atau “Stok Toko”). Stok di database diperbarui sesuai barcode.</p>
+      <input id="stockFile" type="file" accept=".xlsx,.xls,.csv">
+      <p id="stockFileInfo" class="small" role="status"></p>
+      <div id="stockPreview" class="table-wrap" hidden>
+        <table><thead><tr><th>Barcode</th><th>Stok toko</th></tr></thead><tbody id="stockPreviewRows"></tbody></table>
+      </div>
+      <button id="stockUploadBtn" type="button" disabled>Update stok ke database</button>
+      <p id="stockUploadStatus" class="small" role="status"></p>
     </div>
   </section>
 </main>
@@ -308,7 +315,7 @@ function fillLightboxInfo(p) {
   const lines = [
     'Barcode: ' + (p.barcode ?? '—'),
     'Kategori: ' + (p.category || '—') + ' · Harga: ' + price,
-    'Stok sistem: ' + (p.system_stock ?? '—')
+    'Stok toko: ' + (p.store_stock ?? '—') + ' · Stok sistem: ' + (p.system_stock ?? '—')
   ];
   if (p.physical !== undefined) lines.push('Stok fisik: ' + p.physical + ' · Selisih: ' + (p.diff > 0 ? '+' + p.diff : p.diff));
   box.appendChild(title);
@@ -358,7 +365,7 @@ function showProductImage(product) {
   $('productImageName').textContent = product.product_name || 'Nama barang tidak tersedia';
   $('productImageBarcode').textContent = 'Barcode: ' + (product.barcode || '—');
   $('productImagePrice').textContent = rupiah(product.price);
-  $('productImageStock').textContent = 'Stok sistem: ' + (product.system_stock ?? '—');
+  $('productImageStock').textContent = 'Stok toko: ' + (product.store_stock ?? '—') + ' · Stok sistem: ' + (product.system_stock ?? '—');
   $('productImageStatus').textContent = 'Memuat foto produk...';
 
   // Prioritaskan URL gambar di Supabase; jika gagal, coba URL Miniso dari barcode.
@@ -654,7 +661,7 @@ async function startBarcodeScanner() {
         if (document.body.dataset.mode !== 'so') return; // mode Cari Barang: tidak menambah hitungan
         const { data, error } = await supabase
           .from('products')
-          .select('id, barcode, product_name, category, price, system_stock, image_url')
+          .select('id, barcode, product_name, category, price, system_stock, store_stock, image_url')
           .eq('barcode', decodedText)
           .limit(1)
           .maybeSingle();
@@ -876,7 +883,7 @@ async function loadSavedCounts() {
     if (productIds.length) {
       const { data: products, error: productsError } = await supabase
         .from('products')
-        .select('id, barcode, product_name, category, price, system_stock, image_url')
+        .select('id, barcode, product_name, category, price, system_stock, store_stock, image_url')
         .in('id', productIds);
       if (productsError) throw productsError;
       productsById = Object.fromEntries((products || []).map(product => [String(product.id), product]));
@@ -983,7 +990,7 @@ async function searchProducts(scannedBarcode = '') {
   showMessage('productStatus', 'Mencari barang...');
   let query = supabase
     .from('products')
-    .select('id, barcode, product_name, category, price, system_stock, image_url')
+    .select('id, barcode, product_name, category, price, system_stock, store_stock, image_url')
     .order('product_name')
     .limit(100);
 
@@ -1046,7 +1053,7 @@ async function searchProducts(scannedBarcode = '') {
     barcodeWrap.append(thumb, barcodeText);
     barcodeCell.appendChild(barcodeWrap);
     row.appendChild(barcodeCell);
-    [product.product_name, product.category, product.price == null ? '—' : new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(Number(product.price)), product.system_stock].forEach(value => {
+    [product.product_name, product.category, product.price == null ? '—' : new Intl.NumberFormat('id-ID', { style:'currency', currency:'IDR', maximumFractionDigits:0 }).format(Number(product.price)), product.system_stock, product.store_stock].forEach(value => {
       const cell = document.createElement('td');
       cell.textContent = value == null || value === '' ? '—' : String(value);
       row.appendChild(cell);
@@ -1127,6 +1134,79 @@ function setMode(mode) {
 $('tabSearch').addEventListener('click', () => setMode('search'));
 $('tabSO').addEventListener('click', () => setMode('so'));
 try { if (localStorage.getItem('id40Mode') === 'so') setMode('so'); } catch (_) {}
+
+let stockRows = [];
+
+async function readStockFile(file) {
+  stockRows = [];
+  $('stockUploadBtn').disabled = true;
+  $('stockPreview').hidden = true;
+  showMessage('stockUploadStatus', '');
+  showMessage('stockFileInfo', 'Membaca file...');
+  try {
+    const XLSX = await import('https://esm.sh/xlsx@0.18.5');
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' });
+    let headerRow = -1, bcCol = -1, stCol = -1;
+    for (let i = 0; i < Math.min(rows.length, 10) && headerRow < 0; i++) {
+      const h = rows[i].map(x => String(x).replace(/\s+/g, ' ').trim().toLowerCase());
+      const b = h.findIndex(x => /barcode|bar code|条码/.test(x));
+      const t = h.findIndex(x => /门店库存|stok toko|stock toko|store stock|stok_toko|store_stock/.test(x));
+      if (b >= 0 && t >= 0) { headerRow = i; bcCol = b; stCol = t; }
+    }
+    if (headerRow < 0) throw new Error('Kolom tidak ditemukan. Pastikan baris judul punya kolom "Barcode" dan "门店库存" (atau "Stok Toko").');
+    const map = new Map();
+    let skipped = 0;
+    for (const r of rows.slice(headerRow + 1)) {
+      const rawQty = r[stCol];
+      const qty = rawQty === '' || rawQty == null ? NaN : Math.round(Number(String(rawQty).replace(/[^\d.-]/g, '')));
+      const rawCode = r[bcCol];
+      const codeText = typeof rawCode === 'number' ? String(Math.round(rawCode)) : String(rawCode ?? '').trim();
+      const codes = codeText.split('/').map(c => c.trim()).filter(Boolean);
+      if (!codes.length || !Number.isFinite(qty)) { skipped++; continue; }
+      codes.forEach(c => map.set(c, qty));
+    }
+    stockRows = [...map].map(([barcode, qty]) => ({ barcode, qty }));
+    if (!stockRows.length) throw new Error('Tidak ada baris barcode + stok yang valid.');
+    const body = $('stockPreviewRows');
+    body.replaceChildren();
+    stockRows.slice(0, 5).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.append(makeCell(r.barcode), makeCell(r.qty));
+      body.appendChild(tr);
+    });
+    $('stockPreview').hidden = false;
+    showMessage('stockFileInfo', `${file.name}: ${stockRows.length} barcode siap diupdate${skipped ? ' (' + skipped + ' baris dilewati karena kosong/tidak valid)' : ''}. Contoh 5 baris di bawah.`);
+    $('stockUploadBtn').disabled = false;
+  } catch (error) {
+    console.error('Gagal membaca file stok:', error);
+    showMessage('stockFileInfo', 'Gagal membaca file: ' + error.message);
+  }
+}
+
+async function uploadStock() {
+  if (!stockRows.length) return;
+  if (!confirm(`Update stok toko untuk ${stockRows.length} barcode? Nilai lama akan ditimpa.`)) return;
+  const button = $('stockUploadBtn');
+  button.disabled = true;
+  let updated = 0;
+  try {
+    for (let i = 0; i < stockRows.length; i += 1000) {
+      showMessage('stockUploadStatus', `Mengirim ${Math.min(i + 1000, stockRows.length)} dari ${stockRows.length}...`);
+      const { data, error } = await supabase.rpc('update_store_stock', { items: stockRows.slice(i, i + 1000) });
+      if (error) throw error;
+      updated += Number(data || 0);
+    }
+    showMessage('stockUploadStatus', `Selesai: ${updated} barang diperbarui, ${Math.max(0, stockRows.length - updated)} barcode tidak ada di database.`);
+  } catch (error) {
+    console.error('Gagal update stok:', error);
+    showMessage('stockUploadStatus', 'Gagal update: ' + error.message + '. Pastikan SQL setup sudah dijalankan di Supabase dan akun ini berperan supervisor.');
+  } finally {
+    button.disabled = false;
+  }
+}
+$('stockFile').addEventListener('change', e => { const f = e.target.files[0]; if (f) readStockFile(f); });
+$('stockUploadBtn').addEventListener('click', uploadStock);
 
 $('loginForm').addEventListener('submit', login);
 $('logoutBtn').addEventListener('click', logout);
