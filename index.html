@@ -1072,7 +1072,7 @@ async function searchProducts(scannedBarcode = '') {
     row.appendChild(actionCell);
     rows.appendChild(row);
   });
-  showMessage('productStatus', `Menampilkan ${data.length} barang${category && !scannedBarcode ? ' — Kategori: ' + category : ''} (maksimal 100).`);
+  showMessage('productStatus', `Menampilkan ${data.length} barang${category && !scannedBarcode ? ' — Kategori: ' + category : ''} (maksimal 300).`);
 }
 
 async function login(event) {
